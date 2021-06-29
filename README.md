@@ -1,2 +1,2 @@
-# tensorcore_tb
-Verilator Testbench for the Stillwater RISC-V TensorCore Vector co-processor for reproducible linear algebra
+# RISC-V TensorCore
+Transactional Verilog design and Verilator Testbench for a RISC-V TensorCore Vector co-processor for reproducible computation.
