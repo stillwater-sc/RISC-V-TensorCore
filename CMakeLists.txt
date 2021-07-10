@@ -10,7 +10,8 @@ FetchContent_Declare(universal
   )
 FetchContent_MakeAvailable(universal)
 
-execute_process(COMMAND sandpiper-saas -i ${CMAKE_CURRENT_SOURCE_DIR}/src//hw/tensorcore.tlv -o tensorcore.sv --default_includes)
+execute_process(COMMAND sandpiper-saas -i ${CMAKE_CURRENT_SOURCE_DIR}/src//hw/tensorcore.tlv -o tensorcore.sv --default_includes --iArgs)
+##execute_process(COMMAND sandpiper-saas -i ${CMAKE_CURRENT_SOURCE_DIR}/src/hw/tensorcore.tlv -o tensorcore.sv --iArgs)
   
 find_package(verilator HINTS $ENV{VERILATOR_ROOT})
 if (NOT verilator_FOUND)
@@ -27,7 +28,8 @@ message(STATUS "CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
 verilate(tensorcore_tb 
     SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/tensorcore.sv
-        ${CMAKE_CURRENT_BINARY_DIR}/tensorcore_gen.sv
+	##	${CMAKE_CURRENT_BINARY_DIR}/tensorcore_gen.sv
     INCLUDE_DIRS
+        ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/includes
         ${CMAKE_CURRENT_BINARY_DIR}/includes/proj_default)
