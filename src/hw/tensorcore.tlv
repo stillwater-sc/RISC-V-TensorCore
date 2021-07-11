@@ -1,5 +1,5 @@
-//TCORE.tlv
-\m4_TLV_version 1d: tl-x.org
+\m4_TLV_version 1d --noline: tl-x.org
+
 \SV
    // This code can be found in: https://github.com/stevehoover/RISC-V_MYTH_Workshop
    
@@ -7,9 +7,9 @@
 
 \SV
      // URL include paths:
-   //m4_define(['m4_TC_repo'], ['['https://raw.githubusercontent.com/olofk/serv/master/']']) 
-   m4_define(['m4_TC_repo'], ['['https://github.com/nitinm694/Tensor_Core_RISCV_VP/']'])
-   m4_define(['m4_TC_rtl'], ['m4_TC_repo['SV_Modules/']'])
+ //  m4_define(['m4_TC_repo'], ['['https://raw.githubusercontent.com/olofk/serv/master/']']) 
+//   m4_define(['m4_TC_repo'], ['['https://github.com/nitinm694/Tensor_Core_RISCV_VP/']'])
+//   m4_define(['m4_TC_rtl'], ['m4_TC_repo['SV_Modules/']'])
    //m4_define(['m4_servant_rtl'], ['m4_serv_repo['servant/']'])
    //m4_define(['m4_serv_bench'], ['m4_serv_repo['bench/']'])
    //m4_define(['m4_serv_hex'], ['m4_serv_repo['sw/']'])
@@ -20,35 +20,91 @@
    //m4_sv_include_url(m4_serv_bench['uart_decoder.v'])
 
    
-   // Modules:
+   // --------------INCLUDES-------------------------------------
    // Core RTL
-   m4_sv_get_url(m4_TC_rtl['VRF.sv'])
-                              
+   //m4_sv_get_url(m4_TC_rtl['VRF.sv'])
+
+   `include "VRF.sv" 		// Include for Vector Register File (banked SRAM)                         
+
+  //  ------------------------------------------------------------
    /*
    // Hex files:
    m4_sv_get_url(m4_serv_hex['blinky.hex'])
+  */ 
+   // ------------------------
+   // SystemVerilog data types
+
+   typedef logic [39:0] address_t;
+   typedef logic [31:0] operand_t;
+   typedef logic [5:0]  burst_t;   // burst length of the data request
+   typedef logic        bool_t;
    
-   module servant_sim
-   	(input wire  wb_clk,
-   	input wire  wb_rst,
-   	output wire q);
-   	parameter memfile = "";
-   	parameter memsize = 8192;
-   	parameter with_csr = 1;
-   	reg [1023:0] firmware_file;
-   initial
-   	begin
-   	$display("Loading RAM from %0s", "./sv_url_inc/blinky.hex");
-   	$readmemh("./sv_url_inc/blinky.hex", dut.ram.mem);
-   	end
-   servant #(.memfile  (memfile),
-   	.memsize  (memsize),
-   	.sim      (1),
-   	.with_csr (with_csr))
-   	dut(wb_clk, wb_rst, q);
-   endmodule
-   */
-   m4_makerchip_module   // (Expanded in Nav-TLV pane.)
+   typedef logic [31:0] vinstr_t;
+   
+   
+   // --------------
+   // TensorCore
+   
+   module tensorcore #(
+       parameter int unsigned NumWords 		= 1024,
+       parameter int unsigned NumBanks 		= 4,
+       parameter int unsigned WordsPerBank	= NumWords/NumBanks,
+       parameter int unsigned DataWidth		= 32,
+       parameter int unsigned AddrWidth		= (NumWords > 32'd1) ? $clog2(WordsPerBank) :32'd1,
+       parameter int unsigned BankSel		= $clog2(NumBanks)
+   ) 
+   (
+       input logic      reset,
+       input logic      clk,
+       input vinstr_t   vecop,  // RISC-V V instruction
+       output bool_t    rw,     // read/write request indicator
+       output address_t addr,   // Load/Store Unit request address
+       output burst_t   size,   // Load request length
+       output operand_t out
+   );
+
+
+   //Interface signals for VRF
+   logic  [NumBanks-1:0]re;
+   logic  [NumBanks-1:0]we;
+   logic[NumBanks-1:0][AddrWidth-1:0]w_addr;
+   logic[NumBanks-1:0][AddrWidth-1:0]r_addr;
+   logic[NumBanks-1:0][DataWidth-1:0]wdata;
+   
+   logic[NumBanks-1:0][DataWidth-1:0]rdata;
+
+   //VRF Instantiation
+   tc_sram #(
+	.NumWords(NumWords),
+	.NumBanks(NumBanks),
+	.WordsPerBank(WordsPerBank),
+	.DataWidth(DataWidth),
+	.AddrWidth(AddrWidth),
+	.BankSel(BankSel)
+	    )
+   i_tc_sram (
+	.clk(clk),
+	.nrst(reset),
+	.re(re),
+	.we(we),
+	.w_addr(w_addr),
+	.r_addr(r_addr),
+	.wdata(wdata),
+	.rdata(rdata)
+	     );
+   ///////////
+
+
+       
+   always_comb
+   begin
+       out = 42;
+   end
+
+  
+   
+//   endmodule : tensorcore 
+//   m4_makerchip_module   // (Expanded in Nav-TLV pane.)
 \TLV
 
    // /====================\
@@ -82,8 +138,9 @@
    m4_asm(LW, r15, r0, 100)
    // Optional:
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
-   m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
-   */
+*/
+    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
+   
    |cpu
       //Type 1 - Using Stalls (NOPS) to ovrcome Hazards
       @0
@@ -377,9 +434,9 @@
    
    //TB to check pass/fail by monitoring value in x10(r10) at the end of simulation
    // Assert these to end simulation (before Makerchip cycle limit).
-   *passed = *cyc_cnt > 40;
+  // *passed = *cyc_cnt > 40;
    //*passed = |cpu/xreg[15]>>5$value == (1+2+3+4+5+6+7+8+9);
-   *failed = 1'b0;
+  // *failed = 1'b0;
    
    // Macro instantiations for:
    //  o instruction memory
