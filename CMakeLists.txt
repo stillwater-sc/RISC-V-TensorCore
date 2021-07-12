@@ -30,6 +30,9 @@ verilate(tensorcore_tb
         ${CMAKE_CURRENT_BINARY_DIR}/tensorcore.sv
 	##	${CMAKE_CURRENT_BINARY_DIR}/tensorcore_gen.sv
     INCLUDE_DIRS
+        ${CMAKE_SOURCE_DIR}/src/hw/
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/includes
-        ${CMAKE_CURRENT_BINARY_DIR}/includes/proj_default)
+        ${CMAKE_CURRENT_BINARY_DIR}/includes/proj_default
+    VERILATOR_ARGS
+        -Wno-MODDUP)

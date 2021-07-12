@@ -13,12 +13,21 @@ public:
 	{
 		Verilated::traceEverOn(true);
 		module.clk = 0;
+		module.tensorcore->i_tc_sram->sram[0][0] = 0;
 		eval(); // initialize initial values properly
 	}
 
 	virtual	void opentrace(const std::string& vcdname) {
 		bTracing = tracer.open(vcdname);
 	}
+
+  virtual	void fill_sram(IData* input, size_t entries) {
+    memcpy ( module.tensorcore->i_tc_sram->sram, input, sizeof(IData)*entries);
+  }
+
+  virtual	void memset_sram(int value, size_t size) {
+    memset ( module.tensorcore->i_tc_sram->sram,value,size);
+  }
 
 	virtual	void eval(void) {
 		module.eval();

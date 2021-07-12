@@ -63,7 +63,7 @@ module tc_sram #(
 
   // memory array
   
-  logic[DataWidth-1:0] sram [WordsPerBank-1:0][NumBanks-1:0]; // 2D sram memory array
+  logic[DataWidth-1:0] sram [WordsPerBank-1:0][NumBanks-1:0] /*verilator public*/; // 2D sram memory array
   
   // hold the read address when no read access is made
   //addr_t [NumPorts-1:0] r_addr_q;
