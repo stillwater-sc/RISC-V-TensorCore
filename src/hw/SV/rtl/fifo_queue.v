@@ -7,7 +7,6 @@ module fifo_queue (
   input logic read,
   input logic[31:0] wdata,
   output logic[31:0] rdata,
-  //output logic[4:0] fifo_cnt,	// 5 bits for 32 bit deep FIFO
   output logic full,
   output logic empty
  );
@@ -32,9 +31,9 @@ module fifo_queue (
   always @(posedge clk, negedge nrst) begin
     if(!nrst)
       fifo_cnt <= 'd0;
-    else if(!full && write)
+    else if(!full && write && !read)
       fifo_cnt <= fifo_cnt + 1'b1;
-    else if(!empty && read)
+    else if(!empty && read && !write)
       fifo_cnt <= fifo_cnt - 1'b1;
     else
       fifo_cnt <= fifo_cnt;
@@ -45,7 +44,7 @@ module fifo_queue (
     if(!nrst) begin
       rd_ptr <= 'd0;
       wr_ptr <= 'd0;
-      rdata <= 'd0;
+      rdata <= 'hdead;
     end
     
     else if(!read && write) begin
@@ -59,7 +58,8 @@ module fifo_queue (
     end
     
     else if (read && write) begin
-      rdata 	<= wdata;
+      fifo_mem[wr_ptr] <= wdata;
+      rdata <= fifo_mem[rd_ptr];
       rd_ptr	<= rd_ptr + 1;
       wr_ptr	<= wr_ptr + 1;
     end
@@ -67,7 +67,7 @@ module fifo_queue (
     else begin
       rd_ptr <= rd_ptr;
       wr_ptr <= wr_ptr;
-      rdata <= 'hDEAD;
+      rdata <= 'hdead;
     end
   end
   
