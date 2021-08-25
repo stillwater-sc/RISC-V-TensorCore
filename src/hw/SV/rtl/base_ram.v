@@ -15,8 +15,8 @@ module base_ram (
   
   always_ff @(posedge clk, negedge nrst) begin
     if(!nrst) begin
-      rdataA <= 32'd0;
-      rdataB <= 32'd0;
+      rdataA <= 'hdead_dead;
+      rdataB <= 'hdead_dead;
     end
     
     else if (we && !re) begin
@@ -40,7 +40,6 @@ module base_ram (
     else begin
       rdataA	<= rdataA;
       rdataB	<= rdataB;
-      //wdata		<= wdata;
     end
     
   end
