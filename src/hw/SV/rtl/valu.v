@@ -17,7 +17,7 @@ module valu (
     else if(valu_en == 1'b1 && inA != 'hdead_dead && inB != 'hdead_dead) begin
       if( op == 9'h000 || op == 9'h004) 
         out_res = inA + inB;
-      else if(op == 9'h0B9 || op == 9'h0BC) 
+      else if(op == 9'h0B8 || op == 9'h0BC) 
         out_res = inA * inB;
       else 
         out_res = 'hdead_dead;
